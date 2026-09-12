@@ -5,10 +5,13 @@
 غير كده: ~/.config/ClaudeRTL/   (عشان التطوير والاختبار)
 """
 
+import itertools
 import json
 import os
 import tempfile
 import time
+
+_ids = itertools.count()
 
 APP_NAME = 'ClaudeRTL'
 MAX_HISTORY = 40
@@ -69,6 +72,29 @@ def _write_json(path, data):
         return False
 
 
+def _coerce(value, default):
+    """يرجّع القيمة بنفس نوع القيمة الافتراضية، وإلا الافتراضية نفسها.
+
+    الملفات على الديسك ممكن تكون من إصدار أقدم أو متعدّلة بالإيد، فالنوع
+    الغلط لازم يتصلّح هنا مش يوصل للواجهة.
+    """
+    if isinstance(default, bool):
+        return bool(value)
+    if isinstance(default, int):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+    if isinstance(default, float):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+    if isinstance(default, str):
+        return value if isinstance(value, str) else default
+    return value
+
+
 def load():
     data = _read_json(_path('settings.json'), {})
     merged = dict(DEFAULTS)
@@ -77,12 +103,14 @@ def load():
         for key, value in data.items():
             if key not in DEFAULTS:
                 continue
-            if key == 'window' and isinstance(value, dict):
-                merged['window'].update(
-                    {k: v for k, v in value.items() if k in DEFAULTS['window']}
-                )
+            if key == 'window':
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        if k not in DEFAULTS['window']:
+                            continue
+                        merged['window'][k] = None if v is None else _coerce(v, 0)
             else:
-                merged[key] = value
+                merged[key] = _coerce(value, DEFAULTS[key])
     return merged
 
 
@@ -93,9 +121,47 @@ def save(data):
 
 # ─────────────────────────── السجل ───────────────────────────
 
+def _coerce_entry(item):
+    """يحوّل أي شكل قديم لمدخلة سجل صالحة، ويرجّع None لو مافيش نص فيها.
+
+    إصدارات أقدم كانت بتحفظ السجل كسترينجات، أو بمفاتيح تانية. من غير
+    التحويل ده البرنامج بيقع وقت التحميل بدل ما يتجاهل المدخلة.
+    """
+    if isinstance(item, str):
+        return make_entry(item) if item.strip() else None
+    if not isinstance(item, dict):
+        return None
+    text = None
+    for key in ('text', 'content', 'raw', 'body'):
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            text = value
+            break
+    if text is None:
+        return None
+    entry = make_entry(text)
+    if isinstance(item.get('id'), (str, int)) and not isinstance(item.get('id'), bool):
+        entry['id'] = str(item['id'])
+    for key in ('ts', 'time', 'timestamp'):
+        value = item.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            entry['ts'] = float(value)
+            break
+    return entry
+
+
 def load_history():
     data = _read_json(_path('history.json'), [])
-    return data if isinstance(data, list) else []
+    if not isinstance(data, list):
+        return []
+    entries, seen = [], set()
+    for item in data:
+        entry = _coerce_entry(item)
+        if entry is None or entry['id'] in seen:
+            continue
+        seen.add(entry['id'])
+        entries.append(entry)
+    return entries[:MAX_HISTORY]
 
 
 def save_history(entries):
@@ -110,8 +176,10 @@ def clear_history():
 
 
 def make_entry(text):
+    # العدّاد ضروري: لو اتعمل أكتر من مدخلة في نفس الملّي ثانية (وقت تحميل
+    # سجل قديم مثلاً) الطابع الزمني لوحده بيدّي نفس الـid لكلهم.
     return {
-        'id': f'{int(time.time() * 1000)}',
+        'id': f'{int(time.time() * 1000)}-{next(_ids)}',
         'ts': time.time(),
         'text': text[:MAX_ENTRY_CHARS],
     }

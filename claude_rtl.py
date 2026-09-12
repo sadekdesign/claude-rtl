@@ -118,8 +118,14 @@ class ClaudeRTL:
             pass
 
     def on_loaded(self):
-        self._js('init', self.cfg)
-        self.push_history()
+        # أي استثناء هنا بيطلع جوه حلقة أحداث pywebview ويوقف الإقلاع،
+        # فالأأمن إن الواجهة تفتح حتى لو السجل المحفوظ بايظ.
+        try:
+            self._js('init', self.cfg)
+            self.push_history()
+        except Exception:
+            self.history = []
+            self._js('setHistory', [])
 
     # ─────────────── الإعدادات ───────────────
 

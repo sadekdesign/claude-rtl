@@ -9,6 +9,7 @@ python -m pip install -r requirements.txt || goto :err
 echo.
 echo  [1/3] تشغيل الاختبارات...
 python tests\test_mdrender.py || goto :err
+python tests\test_settings.py || goto :err
 
 echo.
 echo  [2/3] بناء الـexe...
