@@ -4,3 +4,9 @@ output/
 __pycache__/
 *.spec
 *.pyc
+*.egg-info/
+*.bak
+*.bak.*
+.venv/
+venv/
+Thumbs.db
