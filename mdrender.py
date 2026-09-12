@@ -303,7 +303,16 @@ def render(src):
                 break
             buf.append(nxt)
             i += 1
-        text = '\n'.join(buf)
-        out.append(f'<p dir="{_dir_of(text)}">{"<br>".join(_inline(b) for b in buf)}</p>')
+        # السطر الجديد جوه الفقرة سطر ليّن زي الماركداون القياسي — بيتجمّع
+        # بمسافة. الكسر الصريح بمسافتين في آخر السطر أو بشرطة مايلة.
+        parts = []
+        for pos, raw in enumerate(buf):
+            hard = raw.endswith('  ') or raw.rstrip().endswith('\\')
+            chunk = raw.strip().rstrip('\\').strip()
+            parts.append(_inline(chunk))
+            if pos < len(buf) - 1:
+                parts.append('<br>' if hard else ' ')
+        text = ' '.join(buf)
+        out.append(f'<p dir="{_dir_of(text)}">{"".join(parts)}</p>')
 
     return ''.join(out)

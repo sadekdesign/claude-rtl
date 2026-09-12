@@ -127,12 +127,24 @@ def _():
     assert mdrender.strip_tashkeel('مُحَمَّدٌ') == 'محمد'
 
 
+@case('السطر الليّن بيتجمّع، والصريح بيكسر')
+def _():
+    soft = mdrender.render('سطر أول\nسطر تاني')
+    contains(soft, '<p dir="rtl">سطر أول سطر تاني</p>')
+    assert '<br>' not in soft, soft
+    hard = mdrender.render('سطر أول  \nسطر تاني')
+    contains(hard, 'سطر أول<br>سطر تاني')
+    slash = mdrender.render('سطر أول\\\nسطر تاني')
+    contains(slash, 'سطر أول<br>سطر تاني')
+
+
 @case('نص مختلط طويل')
 def _():
     html = mdrender.render(
         '# التقرير\n\n'
         'ده **ملخص** فيه `code` ورابط [هنا](https://x.co).\n'
-        'سطر تاني في نفس الفقرة.\n\n'
+        'سطر تاني في نفس الفقرة.  \n'
+        'وده بكسر صريح.\n\n'
         '- نقطة\n  1. فرعية\n\n'
         '| أ | ب |\n|---|---|\n| 1 | 2 |\n\n'
         '```js\nconst x = 1;\n```\n\n'
