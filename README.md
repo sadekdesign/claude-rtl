@@ -54,6 +54,25 @@ build.bat
 بيسطّب المتطلبات، يشغّل الاختبارات، يبني `ClaudeRTL.exe` بـcx_Freeze، وبعدين
 المُثبِّت بـ[Inno Setup](https://jrsoftware.org/isdl.php) لو متسطّب.
 
+## التحديث
+
+لو معاك البرنامج مسطَّب، أمر واحد في PowerShell بينزّل آخر إصدار ويسطّبه
+فوق القديم:
+
+```powershell
+irm https://raw.githubusercontent.com/sadekdesign/claude-rtl/master/update.ps1 | iex
+```
+
+بيقفل النسخة الشغالة، ينزّل آخر Release، يسطّب بصمت، ويشغّل البرنامج تاني.
+الإعدادات والسجل في `%APPDATA%\ClaudeRTL` مابيتلمسوش.
+
+لو معاك الريبو بدل الـexe:
+
+```bat
+git pull origin master
+python -m pip install -r requirements.txt
+```
+
 ## الاختبارات
 
 ```bat
