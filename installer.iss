@@ -21,8 +21,13 @@ DisableProgramGroupPage=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "arabic";  MessagesFile: "compiler:Languages\Arabic.isl"
 
+; Inno مابيقبلش wildcard في اسم الفولدر — مرّر /DBuildDir=... لو نسخة بايثون مختلفة
+#ifndef BuildDir
+  #define BuildDir "build\exe.win-amd64-3.11"
+#endif
+
 [Files]
-Source: "build\exe.win-amd64-*\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Tasks]
