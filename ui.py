@@ -12,15 +12,15 @@ HTML = r'''<!DOCTYPE html>
     --accent:      #D97757;
     --accent-2:    #E0916F;
     --accent-soft: rgba(217, 119, 87, .15);
-    --bg:          #1B1B19;
-    --panel:       #232321;
-    --elev:        #2B2B28;
-    --line:        #35342F;
-    --line-soft:   #2C2B27;
-    --ink:         #EDEBE6;
-    --ink-2:       #C9C6BF;
-    --muted:       #918E87;
-    --code-bg:     #131312;
+    --bg:          #181818;
+    --panel:       #1F1F1F;
+    --elev:        #272727;
+    --line:        #333333;
+    --line-soft:   #262626;
+    --ink:         #ECECEC;
+    --ink-2:       #C8C8C8;
+    --muted:       #8E8E8E;
+    --code-bg:     #141414;
     --shadow:      0 18px 48px rgba(0,0,0,.55);
     --radius:      12px;
 }
