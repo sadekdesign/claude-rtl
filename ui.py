@@ -317,15 +317,17 @@ html[dir="rtl"] .content blockquote { border-radius: 8px 0 0 8px; }
 
 /* مقبض التحجيم */
 .grip {
-    position: fixed; bottom: 0; inset-inline-start: 0;
-    width: 18px; height: 18px; cursor: nesw-resize; z-index: 60; opacity: .35;
+    position: fixed; bottom: 0;
+    width: 18px; height: 18px; z-index: 60; opacity: .35;
 }
-html[dir="rtl"] .grip { cursor: nesw-resize; }
+.grip-l { left: 0; cursor: nesw-resize; }
+.grip-r { right: 0; cursor: nwse-resize; }
 .grip::after {
     content: ''; position: absolute; inset: 5px;
-    border-bottom: 2px solid var(--muted); border-inline-start: 2px solid var(--muted);
-    border-radius: 0 0 0 3px;
+    border-bottom: 2px solid var(--muted);
 }
+.grip-l::after { border-left: 2px solid var(--muted); border-radius: 0 0 0 3px; }
+.grip-r::after { border-right: 2px solid var(--muted); border-radius: 0 0 3px 0; }
 .grip:hover { opacity: .8; }
 </style>
 </head>
@@ -409,8 +411,6 @@ html[dir="rtl"] .grip { cursor: nesw-resize; }
     </div>
     <div class="divider"></div>
     <div class="hint">
-        <kbd>Ctrl+Shift+A</kbd> إظهار آخر نص &nbsp;·&nbsp;
-        <kbd>Ctrl+Shift+D</kbd> إيقاف/تشغيل المراقبة &nbsp;·&nbsp;
         <kbd>Ctrl</kbd>+<kbd>+/-</kbd> حجم الخط &nbsp;·&nbsp;
         <kbd>Alt</kbd>+<kbd>←/→</kbd> تنقّل في السجل
     </div>
@@ -449,7 +449,8 @@ html[dir="rtl"] .grip { cursor: nesw-resize; }
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="grip" id="grip"></div>
+<div class="grip grip-l" id="gripL"></div>
+<div class="grip grip-r" id="gripR"></div>
 
 <script>
 "use strict";
@@ -774,18 +775,21 @@ window.addEventListener('blur', () => {
     document.addEventListener('mouseup', () => { if (on) { on = false; api('geometry_changed'); } });
 })();
 
-// التحجيم من المقبض (الركن السفلي جهة اليسار في RTL)
+// التحجيم من المقبضين (الركنين السفليين — الشمال بيحرّك الحافة الشمال، واليمين اليمين)
 (function () {
-    const grip = $('grip');
-    let on = false, sx = 0, sy = 0;
-    grip.addEventListener('mousedown', (e) => { on = true; sx = e.screenX; sy = e.screenY; e.preventDefault(); });
+    let side = null, sx = 0, sy = 0;
+    for (const [id, s] of [['gripL', 'left'], ['gripR', 'right']]) {
+        $(id).addEventListener('mousedown', (e) => {
+            side = s; sx = e.screenX; sy = e.screenY; e.preventDefault();
+        });
+    }
     document.addEventListener('mousemove', (e) => {
-        if (!on) return;
+        if (!side) return;
         const dx = e.screenX - sx, dy = e.screenY - sy;
         sx = e.screenX; sy = e.screenY;
-        if (dx || dy) api('resize_by', -dx, dy);
+        if (dx || dy) api('resize_by', side === 'left' ? -dx : dx, dy, side === 'left');
     });
-    document.addEventListener('mouseup', () => { if (on) { on = false; api('geometry_changed'); } });
+    document.addEventListener('mouseup', () => { if (side) { side = null; api('geometry_changed'); } });
 })();
 </script>
 </body>

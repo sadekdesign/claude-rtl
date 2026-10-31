@@ -25,10 +25,6 @@ SOURCE_APPS = {'claude.exe'}           # البرامج اللي بنراقب ا
 POLL_INTERVAL = 0.25
 MIN_W, MIN_H = 340, 260
 
-HOTKEY_SHOW = 1
-HOTKEY_TOGGLE = 2
-VK_A, VK_D = 0x41, 0x44
-
 
 def _relative_time(ts):
     delta = max(0, int(time.time() - ts))
@@ -62,8 +58,8 @@ class Api:
     def move_by(self, dx, dy):
         self._app.move_by(int(dx), int(dy))
 
-    def resize_by(self, dw, dh):
-        self._app.resize_by(int(dw), int(dh))
+    def resize_by(self, dw, dh, from_left=True):
+        self._app.resize_by(int(dw), int(dh), bool(from_left))
 
     def geometry_changed(self):
         self._app.remember_geometry()
@@ -251,10 +247,11 @@ class ClaudeRTL:
         except Exception:
             pass
 
-    def resize_by(self, dw, dh):
+    def resize_by(self, dw, dh, from_left=True):
         new_w = max(MIN_W, self._w + dw)
         new_h = max(MIN_H, self._h + dh)
-        shift = new_w - self._w       # المقبض في الركن الشمال، فالحافة دي بتتحرك
+        # من الركن الشمال الحافة الشمال هي اللي بتتحرك؛ من اليمين الحافة الشمال ثابتة
+        shift = new_w - self._w if from_left else 0
         self._w, self._h = new_w, new_h
         try:
             self.window.resize(self._w, self._h)
@@ -302,21 +299,6 @@ class ClaudeRTL:
         self._js('setMonitoring', self.cfg['monitor_enabled'])
         if self.tray:
             self.tray.update_menu()
-
-    def on_hotkey(self, hotkey_id):
-        if hotkey_id == HOTKEY_SHOW:
-            self.toggle()
-        elif hotkey_id == HOTKEY_TOGGLE:
-            self.set_monitoring(not self.cfg['monitor_enabled'])
-
-    def hotkeys(self):
-        winapi.hotkey_loop(
-            {
-                HOTKEY_SHOW: (winapi.MOD_CONTROL | winapi.MOD_SHIFT, VK_A),
-                HOTKEY_TOGGLE: (winapi.MOD_CONTROL | winapi.MOD_SHIFT, VK_D),
-            },
-            self.on_hotkey,
-        )
 
     # ─────────────── أيقونة شريط المهام ───────────────
 
@@ -371,7 +353,7 @@ class ClaudeRTL:
         )
         self.window.events.loaded += self.on_loaded
 
-        for target in (self.monitor, self.hotkeys, self.run_tray):
+        for target in (self.monitor, self.run_tray):
             threading.Thread(target=target, daemon=True).start()
 
         webview.start(debug=False)

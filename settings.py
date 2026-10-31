@@ -95,7 +95,12 @@ def save(data):
 
 def load_history():
     data = _read_json(_path('history.json'), [])
-    return data if isinstance(data, list) else []
+    if not isinstance(data, list):
+        return []
+    # النسخة القديمة كانت بتحفظ النصوص كـ strings — نتجاهل أي عنصر مش بالفورمات الحالي
+    return [e for e in data
+            if isinstance(e, dict) and isinstance(e.get('text'), str)
+            and 'id' in e and 'ts' in e]
 
 
 def save_history(entries):
